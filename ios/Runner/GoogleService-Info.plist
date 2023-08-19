@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>795901546274-nlfu2jqu4km8qmuhoq275aoa3u1emav6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.795901546274-nlfu2jqu4km8qmuhoq275aoa3u1emav6</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>795901546274-vv7p9qhtipqa5pvvt0cjgt5ss8gvmnod.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBXBs6qxo5-i6gcW-rs1T3DD54fBidUPgU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>795901546274</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.mizormor.mobile</string>
+	<key>PROJECT_ID</key>
+	<string>mizormor-2c6ef</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mizormor-2c6ef.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:795901546274:ios:754938ea69f3007a8f5f7b</string>
+</dict>
+</plist>
