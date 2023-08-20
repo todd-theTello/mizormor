@@ -55,7 +55,7 @@ class _TicketPaymentViewState extends ConsumerState<TicketPaymentView> with Inpu
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.watch(userStateProvider);
-    ref.listen(tripPaymentStateProvider, (previous, state) {
+    ref.listen(tripPaymentStateProvider, (previous, state) async {
       if (state is TripLoading) {
         AuthenticationLoadingScreen.instance().show(context: context, text: 'Making payment');
       } else {
@@ -69,6 +69,8 @@ class _TicketPaymentViewState extends ConsumerState<TicketPaymentView> with Inpu
           ),
         );
         Navigator.of(context).pop();
+        await ref.read(userStateProvider.notifier).getUserInfo();
+        await ref.read(userTripStateProvider.notifier).getUserTrips();
       } else if (state is TripFailure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -77,7 +79,6 @@ class _TicketPaymentViewState extends ConsumerState<TicketPaymentView> with Inpu
             content: Text(state.error),
           ),
         );
-        Navigator.of(context).pop();
       }
     });
     return Scaffold(
@@ -227,7 +228,7 @@ class _TicketPaymentViewState extends ConsumerState<TicketPaymentView> with Inpu
                                   ? () async {
                                       if (user is UserSuccess) {
                                         await ref.read(tripPaymentStateProvider.notifier).makeTripPayment(
-                                              tripId: widget.tripDetails.tripId,
+                                              trip: widget.tripDetails,
                                               pickupPoint: pickupPointController.text,
                                               user: user.user,
                                             );
