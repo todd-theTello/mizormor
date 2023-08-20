@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../trips/trip_details.dart';
-
 class NotificationsView extends ConsumerStatefulWidget {
   const NotificationsView({super.key});
 
@@ -22,11 +20,7 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
       body: ListView.separated(
         itemBuilder: (context, index) {
           return ListTile(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const TripDetailsView(),
-              ),
-            ),
+            onTap: null,
             leading: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(

@@ -27,6 +27,7 @@ void main() async {
     container.read(onboardingProvider.notifier).checkOnboarding();
     if (LocalPreference.isLoggedIn) {
       await container.read(userStateProvider.notifier).getUserInfo();
+      await container.read(userTripStateProvider.notifier).getUserTrips();
       await container.read(tripStateProvider.notifier).getAllTrips();
     }
     runApp(

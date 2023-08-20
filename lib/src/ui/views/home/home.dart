@@ -1,18 +1,19 @@
 import 'dart:async';
 
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
-import 'package:iconly/iconly.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import 'package:mizormor/utils/extensions/count_down_timer.dart';
+import 'package:mizormor/utils/extensions/alignment.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../utils/extensions/padding.dart';
+import '../../../core/database/shared_preference.dart';
 import '../../../core/states/trips/states_notifiers.dart';
 import '../../../core/states/users/states_notifier.dart';
 import '../../widgets/rich_text_widget/rich_text.dart';
@@ -31,11 +32,12 @@ class HomeView extends ConsumerStatefulWidget {
 }
 
 class _DashboardViewState extends ConsumerState<HomeView> {
-  ValueNotifier<Locations> locationValue = ValueNotifier(Locations.accra);
+  final PageController pendingPageController = PageController(viewportFraction: 0.8);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tripState = ref.watch(tripStateProvider);
+    final tripState = ref.watch(userTripStateProvider);
     final userState = ref.watch(userStateProvider);
 
     return CustomScrollView(
@@ -45,15 +47,55 @@ class _DashboardViewState extends ConsumerState<HomeView> {
             leadingWidth: MediaQuery.of(context).size.width * 0.7,
             leading: Padding(
               padding: const EdgeInsets.only(left: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Hey there',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.tertiary,
-                      )),
-                  Text('Where to next?', style: theme.textTheme.titleMedium),
-                ],
+              child: GestureDetector(
+                onTap: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.blue,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10000),
+                        child: userState.user.profileImageUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: userState.user.profileImageUrl!,
+                                errorWidget: (context, url, error) => LocalPreference.displayName != ''
+                                    ? Text(
+                                        userState.user.otherNames?.substring(0, 1) ??
+                                            userState.user.surname?.substring(0, 1) ??
+                                            '',
+                                        style: theme.textTheme.displaySmall,
+                                      )
+                                    : const Icon(Iconsax.user, size: 40),
+                              )
+                            : Text(
+                                userState.user.otherNames?.substring(0, 1) ??
+                                    userState.user.surname?.substring(0, 1) ??
+                                    '',
+                                style: theme.textTheme.displaySmall,
+                              ),
+                      ),
+                    ).paddingOnly(right: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello ${userState.user.otherNames}',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        Text(
+                          'Where to next?',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: theme.colorScheme.tertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -96,214 +138,140 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                         const Text('Pick a location'),
                       ],
                     ),
-                  ).paddingLTRB(24, 22, 24, 40),
+                  ).paddingLTRB(24, 22, 24, 20),
                 ),
-                // if (userState is UserSuccess && !userState.user.verified)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const AccountVerificationView(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Unlock all features',
-                                style: theme.textTheme.bodyLarge,
-                              ),
-                              Text(
-                                'Provide additional information to complete your account verification.',
-                                style: theme.textTheme.bodyMedium,
-                              ).paddingOnly(bottom: 24),
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: theme.colorScheme.secondary,
-                                    child: const Icon(
-                                      Icons.add,
-                                      size: 24,
-                                      color: Colors.white,
-                                    ),
-                                  ).paddingOnly(right: 8),
-                                  Text('Add documents', style: theme.textTheme.bodyLarge)
-                                ],
-                              ),
-                            ],
-                          ),
+                if (!userState.user.verified)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AccountVerificationView(user: userState.user),
                         ),
-                        SvgPicture.asset(
-                          'assets/images/verify-card.svg',
-                        )
-                      ],
-                    ),
-                  ),
-                ).paddingLTRB(24, 0, 24, 40),
-                Text(
-                  'Upcoming trips',
-                  style: theme.textTheme.titleLarge,
-                ).paddingOnly(left: 24, bottom: 24),
-                if (tripState is TripSuccess && tripState.trips.isNotEmpty)
-                  CarouselSlider.builder(
-                    itemCount: tripState.trips.length,
-                    itemBuilder: (context, itemIndex, pageIndex) {
-                      return GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withOpacity(0.4),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Unlock all features',
+                                  style: theme.textTheme.titleSmall,
+                                ),
+                                Text(
+                                  'Provide additional information to complete your account verification.',
+                                  style: theme.textTheme.bodySmall,
+                                ).paddingOnly(bottom: 12),
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: theme.colorScheme.secondary,
+                                      child: const Icon(Icons.add, color: Colors.white),
+                                    ).paddingOnly(right: 8),
+                                    Text('Add documents', style: theme.textTheme.bodyMedium)
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Stack(
+                          const SizedBox(width: 12),
+                          SvgPicture.asset(
+                            'assets/images/verify-card.svg',
+                          )
+                        ],
+                      ),
+                    ),
+                  ).paddingLTRB(24, 0, 24, 20),
+                Row(
+                  children: [
+                    Text(
+                      'Upcoming trips',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    if (tripState is UserTripSuccess && tripState.trips.length > 3)
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('View more'),
+                      ),
+                  ],
+                ).paddingOnly(left: 24, bottom: 16),
+                if (tripState is UserTripSuccess && tripState.trips.isNotEmpty) ...[
+                  SizedBox(
+                    height: 32 * 5,
+                    child: PageView.builder(
+                        controller: pendingPageController,
+                        itemCount: tripState.trips.length,
+                        padEnds: false,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              unawaited(
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => TripDetailView(trip: tripState.trips[index]),
+                                )),
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withOpacity(0.4),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Container(
-                                    width: double.infinity,
-                                    height: 200,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      color: theme.primaryColor.withOpacity(0.6),
-                                      border: Border.all(
-                                        color: theme.colorScheme.primary.withOpacity(0.4),
-                                      ),
-                                      // image: DecorationImage(
-                                      //   image: NetworkImage(tripState.trips[itemIndex].tripImg!),
-                                      //   fit: BoxFit.cover,
-                                      // ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 16,
-                                    right: 16,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.white.withOpacity(0.5),
-                                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.4)),
-                                      ),
-                                      child: Text(
-                                        NumberFormat.currency(symbol: 'GH₵ ').format(399),
-                                        style: theme.textTheme.bodyLarge?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 14,
-                                    left: 16,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.white.withOpacity(0.5),
-                                        border: Border.all(
-                                          color: theme.colorScheme.primary.withOpacity(0.4),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Departs in   ',
-                                            style: theme.textTheme.bodyLarge?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          Text(
-                                            86399.toFormatHHMMSS,
-                                            style: theme.textTheme.bodyLarge?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ).paddingOnly(bottom: 12),
-                              Row(
-                                children: [
-                                  Column(
+                                  Text('Trip from', style: theme.textTheme.titleMedium),
+                                  Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Icon(IconlyLight.location),
-                                      Container(
-                                        height: 24,
-                                        width: 1,
-                                        color: Colors.grey,
-                                      ).paddingSymmetric(vertical: 4),
-                                      const Icon(IconlyLight.location),
+                                      Text('Accra', style: theme.textTheme.titleMedium),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
+                                          const Text('to').paddingSymmetric(horizontal: 12),
+                                          Container(
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
+                                        ],
+                                      ).paddingSymmetric(horizontal: 12).expanded(),
+                                      Text('Takoradi', style: theme.textTheme.titleMedium),
                                     ],
-                                  ).paddingOnly(right: 12, left: 8),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Accra',
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontSize: 18,
-                                        ),
-                                      ).paddingOnly(bottom: 26),
-                                      Text(
-                                        'Takoradi',
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Spacer(),
-                                  FilledButton(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.primaryContainer,
-                                      shape: const StadiumBorder(),
-                                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                                    ),
-                                    onPressed: () async {
-                                      unawaited(
-                                        Navigator.of(context).push(MaterialPageRoute(
-                                          builder: (_) => const TripDetailsView(),
-                                        )),
-                                      );
-                                    },
-                                    child: const Text('View'),
-                                  )
+                                  ).paddingSymmetric(vertical: 12),
+                                  RichTextWidget(texts: [
+                                    BaseText.custom(text: 'Departs  '),
+                                    BaseText.plain(
+                                        text: DateFormat.yMMMEd().format(
+                                      tripState.trips[index].departureTime,
+                                    )),
+                                  ]),
                                 ],
-                              ).paddingOnly(bottom: 12),
-                            ],
-                          ),
-                        ),
-                      ).paddingSymmetric(horizontal: 12);
-                    },
-                    options: CarouselOptions(
-                      aspectRatio: 34 / 28,
-                      viewportFraction: 0.9,
-                      autoPlay: tripState.trips.length > 1,
-                      autoPlayInterval: const Duration(seconds: 6),
-                    ),
-                  )
-                else
+                              ),
+                            ),
+                          ).paddingOnly(
+                              left: index == 0 ? 24 : 0, right: index == tripState.trips.length - 1 ? 24 : 12);
+                        }),
+                  ),
+                  SmoothPageIndicator(
+                    controller: pendingPageController,
+                    count: tripState.trips.length >= 3 ? 3 : tripState.trips.length,
+                    effect: JumpingDotEffect(activeDotColor: theme.primaryColor),
+                  ).centerAlign()
+                ] else
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -322,11 +290,11 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () {},
-                        child: const Text('View Available Trips'),
+                        child: const Text('Book a trip'),
                       ).paddingSymmetric(horizontal: 72, vertical: 8),
                     ],
                   ),
-                const Gap(64),
+                const Gap(32),
                 Row(
                   children: [
                     Text(
@@ -338,52 +306,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: theme.primaryColor,
                       ),
-                    ), /*
-                    ValueListenableBuilder(
-                        valueListenable: locationValue,
-                        builder: (context, travelFrom, _) {
-                          return Platform.isAndroid
-                              ? DropdownButton(
-                                  value: travelFrom,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.primaryColor,
-                                  ),
-                                  isDense: true,
-                                  items: Locations.values
-                                      .map((location) => DropdownMenuItem<Locations>(
-                                          value: location,
-                                          child: Text(
-                                            location.locationName(location: location),
-                                          )))
-                                      .toList(),
-                                  onChanged: (newValue) {
-                                    locationValue.value = newValue!;
-                                  },
-                                  underline: const SizedBox.shrink(),
-                                )
-                              : GestureDetector(
-                                  onTap: () async {
-                                    await showCupertinoModalPopup<Locations>(
-                                      context: context,
-                                      builder: (_) => LocationBottomSelector(
-                                        locationValue: locationValue,
-                                      ),
-                                    );
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        travelFrom.locationName(location: travelFrom),
-                                        style: theme.textTheme.titleLarge?.copyWith(
-                                          color: theme.primaryColor,
-                                        ),
-                                      ),
-                                      const Icon(Icons.arrow_drop_down)
-                                    ],
-                                  ),
-                                );
-                        }).paddingOnly(left: 12),
-                 */
+                    ),
                   ],
                 ),
                 const Gap(16),
@@ -433,7 +356,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                                   RichTextWidget(
                                     texts: [
                                       BaseText.plain(text: 'From '),
-                                      BaseText.custom(text: 'TUDU STC STATION'),
+                                      BaseText.custom(text: 'Circle VIP station'),
                                     ],
                                     styleForAll: theme.textTheme.bodyLarge?.copyWith(
                                       color: Colors.white,
@@ -450,7 +373,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                                     ),
                                   ),
                                   Text(
-                                    'Bolgatanga',
+                                    'Kumasi',
                                     style: theme.textTheme.titleMedium?.copyWith(
                                       color: Colors.white,
                                     ),

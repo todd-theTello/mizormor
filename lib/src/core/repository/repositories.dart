@@ -4,10 +4,14 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mizormor/src/core/model/trip_request_data.dart';
 import 'package:mizormor/src/core/model/trips.dart';
 import 'package:mizormor/src/core/model/user.dart';
+import 'package:mizormor/src/core/model/user_trip.dart';
+import 'package:mizormor/utils/extensions/object/log.dart';
 
 import '../database/shared_preference.dart';
 import '../model/base_response.dart';
