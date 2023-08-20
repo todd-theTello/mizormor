@@ -280,17 +280,16 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
               ).paddingOnly(bottom: 32),
               FilledButton(
                 onPressed: () async {
-                  // await ref.read(userStateProvider.notifier).updateUser(
-                  //   user: SafeGuardUser(
-                  //     fullName: fullName.text,
-                  //     email: email.text,
-                  //     dateOfBirth: dateOfBirth.value,
-                  //     phoneNumber: '+233${phoneNumber.text}',
-                  //     height: double.tryParse(height.text),
-                  //     weight: double.tryParse(weight.text),
-                  //   ),
-                  //   image: profileImage.value,
-                  // );
+                  await ref.read(userStateProvider.notifier).updateUser(
+                        user: user.user.copyWith(
+                          otherNames: otherNamesController.text,
+                          surname: surnameController.text,
+                          email: emailController.text,
+                          phoneNumber: '+233${phoneNumberController.text}',
+                          userId: user.user.userId,
+                        ),
+                        profileImage: profileImage.value,
+                      );
                 },
                 child: const Text('Update'),
               ),
