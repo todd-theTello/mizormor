@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../model/user.dart';
 import '../../repository/repositories.dart';
@@ -18,6 +19,24 @@ class UserStateNotifier extends StateNotifier<UserStates> {
     state = UserLoading();
     try {
       final userResponse = await _userRepository.fetchUserInfo();
+      if (userResponse.status) {
+        state = UserSuccess(user: userResponse.data!);
+      } else {
+        state = UserFailure(error: userResponse.message);
+      }
+    } catch (error) {
+      state = UserFailure(error: error.toString());
+    }
+  }
+
+  Future<void> updateUser({required MizormorUserInfo user, XFile? profileImage, XFile? idCardImage}) async {
+    state = UserLoading();
+    try {
+      final userResponse = await _userRepository.updateUser(
+        user: user,
+        profileImage: profileImage,
+        idCardImage: idCardImage,
+      );
       if (userResponse.status) {
         state = UserSuccess(user: userResponse.data!);
       } else {

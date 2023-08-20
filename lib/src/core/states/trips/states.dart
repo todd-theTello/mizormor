@@ -27,6 +27,17 @@ class TripSuccess extends TripStates {
 }
 
 ///
+class UserTripSuccess extends TripStates {
+  ///
+  UserTripSuccess({required this.trips});
+
+  ///
+  final List<UserTrips> trips;
+  @override
+  List<Object?> get props => [trips];
+}
+
+///
 class TripPaymentSuccess extends TripStates {
   @override
   List<Object?> get props => [];
