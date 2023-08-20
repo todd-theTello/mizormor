@@ -12,6 +12,8 @@ class Trips {
     required this.departureTime,
     required this.tripStatus,
     required this.passengers,
+    required this.date,
+    required this.seatCapacity,
   });
 
   ///
@@ -25,6 +27,8 @@ class Trips {
         ticketPrice: double.parse(json['ticket_price'].toString()),
         departureTime: (json['departure_time'] as Timestamp).toDate(),
         tripStatus: json['status'] as String,
+        seatCapacity: int.parse(json['seat_capacity'].toString()),
+        date: int.parse(json['date'].toString()),
         passengers: json['passengers'] == null
             ? []
             : List<TripPassengers>.from(
@@ -39,6 +43,9 @@ class Trips {
 
   ///
   final String bus;
+
+  ///
+  final int date;
 
   ///
   final String destination;
@@ -57,6 +64,7 @@ class Trips {
 
   ///
   final List<TripPassengers> passengers;
+  final int seatCapacity;
 
   ///
   Map<String, dynamic> toJson() => {
