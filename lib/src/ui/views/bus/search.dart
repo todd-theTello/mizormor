@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import 'package:mizormor/src/core/states/trips/states_notifiers.dart';
 
 import '../../../../utils/extensions/alignment.dart';
 import '../../../../utils/extensions/dismiss_keyboard.dart';
 import '../../../../utils/extensions/padding.dart';
+import '../../../core/model/trip_request_data.dart';
+import '../../../core/states/search/state_notifiers.dart';
 import '../../widgets/table_row_element.dart';
 import '../payment/ticket_payment.dart';
 
@@ -23,111 +24,97 @@ class SearchBusView extends ConsumerStatefulWidget {
 }
 
 class _SearchBusViewState extends ConsumerState<SearchBusView> {
-  final TextEditingController locationController = TextEditingController();
   final TextEditingController destinationController = TextEditingController();
   ValueNotifier<DateTime?> departureDate = ValueNotifier(null);
   ValueNotifier<bool?> validForm = ValueNotifier(null);
   void validateForm() {
-    validForm.value =
-        departureDate.value != null && locationController.text.isNotEmpty && destinationController.text.isNotEmpty;
+    validForm.value = departureDate.value != null && destinationController.text.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final searchState = ref.watch(tripStateProvider);
+    final searchState = ref.watch(searchStateProvider);
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
+          const SliverAppBar(
             centerTitle: false,
             floating: true,
             titleSpacing: 24,
-            title: const Text('Search'),
-            bottom: PreferredSize(
-              preferredSize: const Size(double.infinity, 132),
-              child: ValueListenableBuilder(
-                  valueListenable: validForm,
-                  builder: (context, form, _) {
-                    return Column(
-                      children: [
-                        TextField(
-                          controller: destinationController,
-                          readOnly: true,
-                          onSubmitted: (_) {
-                            if (form!) {
-                              // ref.read(searchStateProvider.notifier).getTrip(
-                              //       data: TripRequestData(
-                              //         location: locationController.text,
-                              //         destination: destinationController.text,
-                              //         departureTime: departureTime.value!,
-                              //         departureDate: departureDate.value!,
-                              //       ),
-                              //     );
-                            }
-                          },
-                          onChanged: (_) {
-                            validateForm();
-                          },
-                          onTap: () async {
-                            destinationController.text = await showModalBottomSheet(
-                              showDragHandle: true,
-                              context: context,
-                              builder: (_) => const LocationSelector(),
-                            );
-                          },
-                          decoration: const InputDecoration(
-                            hintText: 'Destination',
-                            prefixIcon: Icon(Iconsax.tag),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            ValueListenableBuilder(
-                                valueListenable: departureDate,
-                                builder: (context, departure, _) {
-                                  return TextField(
-                                    controller: TextEditingController(
-                                        text: departure != null ? DateFormat.yMMMEd().format(departure) : null),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      departureDate.value = await showDatePicker(
-                                        context: context,
-                                        selectableDayPredicate: (_) {
-                                          return true;
-                                        },
-                                        initialDate: departure ?? DateTime.now(),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 7)),
-                                      );
-                                      validateForm();
-
-                                      if (form!) {
-                                        // await ref.read(searchStateProvider.notifier).getTrip(
-                                        //       data: TripRequestData(
-                                        //         location: locationController.text,
-                                        //         destination: destinationController.text,
-                                        //         departureTime: departureTime.value!,
-                                        //         departureDate: departureDate.value!,
-                                        //       ),
-                                        //     );
-                                      }
-                                    },
-                                    decoration: const InputDecoration(
-                                      prefixIcon: Icon(Iconsax.calendar),
-                                      hintText: 'Departure date',
-                                    ),
-                                  ).paddingOnly(right: 8).expanded();
-                                }),
-                          ],
-                        ).paddingOnly(top: 16),
-                      ],
-                    ).paddingSymmetric(horizontal: 24);
-                  }),
-            ),
+            title: Text('Search'),
           ),
+          SliverToBoxAdapter(
+            child: ValueListenableBuilder(
+                valueListenable: validForm,
+                builder: (context, form, _) {
+                  return Column(
+                    children: [
+                      TextField(
+                        controller: destinationController,
+                        readOnly: true,
+                        onChanged: (_) {
+                          validateForm();
+                        },
+                        onTap: () async {
+                          destinationController.text = await showModalBottomSheet(
+                            showDragHandle: true,
+                            context: context,
+                            builder: (_) => const LocationSelector(),
+                          );
+                          if (form!) {
+                            ref.read(searchStateProvider.notifier).fetchRequestedTrip(
+                                  data: TripRequestData(
+                                    destination: destinationController.text,
+                                    departureDate: departureDate.value!,
+                                  ),
+                                );
+                          }
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Destination',
+                          prefixIcon: Icon(Iconsax.tag),
+                        ),
+                      ),
+                      ValueListenableBuilder(
+                          valueListenable: departureDate,
+                          builder: (context, departure, _) {
+                            return TextField(
+                              controller: TextEditingController(
+                                  text: departure != null ? DateFormat.yMMMEd().format(departure) : null),
+                              readOnly: true,
+                              onTap: () async {
+                                departureDate.value = await showDatePicker(
+                                  context: context,
+                                  selectableDayPredicate: (_) {
+                                    return true;
+                                  },
+                                  initialDate: departure ?? DateTime.now(),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 7)),
+                                );
+                                validateForm();
 
-          if (searchState is TripSuccess)
+                                if (form!) {
+                                  ref.read(searchStateProvider.notifier).fetchRequestedTrip(
+                                        data: TripRequestData(
+                                          destination: destinationController.text,
+                                          departureDate: departureDate.value!,
+                                        ),
+                                      );
+                                }
+                              },
+                              decoration: const InputDecoration(
+                                prefixIcon: Icon(Iconsax.calendar),
+                                hintText: 'Departure date',
+                              ),
+                            );
+                          }).paddingOnly(top: 16),
+                    ],
+                  ).paddingSymmetric(horizontal: 24);
+                }),
+          ),
+          if (searchState is SearchSuccess)
             if (searchState.trips.isNotEmpty)
               SliverList.separated(
                   itemCount: searchState.trips.length,
@@ -145,68 +132,68 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(
-                                    'Departs at ${TimeOfDay.fromDateTime(searchState.trips[index].departureTime).format(context)}',
-                                    textAlign: TextAlign.left,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Trip from', style: theme.textTheme.titleMedium),
+                                      const Icon(Iconsax.arrow_down_1)
+                                    ],
                                   ),
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      Text('Accra', style: theme.textTheme.titleMedium),
+                                      Row(
                                         children: [
-                                          const Icon(Iconsax.location),
                                           Container(
-                                            height: 24,
-                                            width: 1,
-                                            color: Colors.grey,
-                                          ).paddingSymmetric(vertical: 4),
-                                          const Icon(Iconsax.tag),
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
+                                          const Text('to').paddingSymmetric(horizontal: 12),
+                                          Container(
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
                                         ],
-                                      ).paddingOnly(right: 12, left: 8),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Accra',
-                                            // searchState.trip!.departureLocation!,
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontSize: 18,
-                                            ),
-                                          ).paddingOnly(bottom: 26),
-                                          Text(
-                                            searchState.trips[index].destination,
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        constraints: const BoxConstraints(maxWidth: 150),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: theme.colorScheme.secondaryContainer,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text('72 seats').paddingOnly(bottom: 4),
-                                            ClipRRect(
-                                              borderRadius: BorderRadius.circular(12),
-                                              child: LinearProgressIndicator(
-                                                value: searchState.trips[index].passengers.length / 72,
-                                              ),
-                                            ).paddingOnly(bottom: 4),
-                                          ],
-                                        ),
-                                      ).paddingOnly(bottom: 8),
+                                      ).paddingSymmetric(horizontal: 12).expanded(),
+                                      Text(searchState.trips[index].destination, style: theme.textTheme.titleMedium),
                                     ],
-                                  ).paddingSymmetric(vertical: 12)
+                                  ).paddingSymmetric(vertical: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    constraints: const BoxConstraints(maxWidth: 150),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: theme.colorScheme.secondaryContainer,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('${searchState.trips[index].passengers.length} / ${searchState.trips[index].seatCapacity} seats taken')
+                                            .paddingOnly(bottom: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: LinearProgressIndicator(
+                                            value: searchState.trips[index].passengers.length / 72,
+                                          ),
+                                        ).paddingOnly(bottom: 4),
+                                      ],
+                                    ),
+                                  ).paddingOnly(bottom: 16),
+                                  Table(defaultVerticalAlignment: TableCellVerticalAlignment.middle, children: [
+                                    buildTableRow(
+                                      context: context,
+                                      leading: 'Departure date',
+                                      trailing: DateFormat.yMMMMd().format(searchState.trips[index].departureTime),
+                                    ),
+                                    buildTableRow(
+                                      context: context,
+                                      leading: 'Departure time',
+                                      trailing: TimeOfDay.fromDateTime(
+                                        searchState.trips[index].departureTime,
+                                      ).format(context),
+                                    ),
+                                  ]),
                                 ],
                               ),
                             ),
@@ -222,68 +209,54 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(
-                                    'Departs at ${TimeOfDay.fromDateTime(searchState.trips[index].departureTime).format(context)}',
-                                    textAlign: TextAlign.left,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Trip from', style: theme.textTheme.titleMedium),
+                                      const Icon(Iconsax.arrow_up_2)
+                                    ],
                                   ),
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      Text('Accra', style: theme.textTheme.titleMedium),
+                                      Row(
                                         children: [
-                                          const Icon(Iconsax.location),
                                           Container(
-                                            height: 24,
-                                            width: 1,
-                                            color: Colors.grey,
-                                          ).paddingSymmetric(vertical: 4),
-                                          const Icon(Iconsax.tag),
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
+                                          const Text('to').paddingSymmetric(horizontal: 12),
+                                          Container(
+                                            height: 1,
+                                            color: theme.primaryColor,
+                                          ).expanded(),
                                         ],
-                                      ).paddingOnly(right: 12, left: 8),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Accra',
-                                            // searchState.trip!.departureLocation!,
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontSize: 18,
-                                            ),
-                                          ).paddingOnly(bottom: 26),
-                                          Text(
-                                            searchState.trips[index].destination,
-                                            style: theme.textTheme.titleMedium?.copyWith(
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        constraints: const BoxConstraints(maxWidth: 150),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: theme.colorScheme.secondaryContainer,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text('72 seats').paddingOnly(bottom: 4),
-                                            ClipRRect(
-                                              borderRadius: BorderRadius.circular(12),
-                                              child: LinearProgressIndicator(
-                                                value: searchState.trips[index].passengers.length / 72,
-                                              ),
-                                            ).paddingOnly(bottom: 4),
-                                          ],
-                                        ),
-                                      ).paddingOnly(bottom: 8),
+                                      ).paddingSymmetric(horizontal: 12).expanded(),
+                                      Text(searchState.trips[index].destination, style: theme.textTheme.titleMedium),
                                     ],
-                                  ).paddingSymmetric(vertical: 12),
+                                  ).paddingSymmetric(vertical: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    constraints: const BoxConstraints(maxWidth: 150),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: theme.colorScheme.secondaryContainer,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('${searchState.trips[index].passengers.length} / ${searchState.trips[index].seatCapacity} seats taken')
+                                            .paddingOnly(bottom: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: LinearProgressIndicator(
+                                            value: searchState.trips[index].passengers.length / 72,
+                                          ),
+                                        ).paddingOnly(bottom: 4),
+                                      ],
+                                    ),
+                                  ).paddingOnly(bottom: 16),
                                   Table(defaultVerticalAlignment: TableCellVerticalAlignment.middle, children: [
                                     buildTableRow(
                                       context: context,
@@ -340,52 +313,54 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                   },
                   separatorBuilder: (context, index) {
                     return const SizedBox(height: 16);
-                  }).sliverPaddingOnly(top: 32),
-          //   else
-          //     SliverFillRemaining(
-          //       child: Column(
-          //         crossAxisAlignment: CrossAxisAlignment.stretch,
-          //         mainAxisAlignment: MainAxisAlignment.center,
-          //         children: [
-          //           Text(
-          //             'No trips available for selection',
-          //             textAlign: TextAlign.center,
-          //             style: theme.textTheme.labelMedium?.copyWith(fontSize: 22),
-          //           ).paddingOnly(bottom: 8),
-          //           Text(
-          //             'Browse all available trips',
-          //             textAlign: TextAlign.center,
-          //             style: theme.textTheme.labelMedium?.copyWith(fontSize: 18),
-          //           ).paddingOnly(bottom: 16),
-          //           FilledButton(
-          //             onPressed: () {},
-          //             child: const Text('Browse all trip'),
-          //           ).paddingOnly(bottom: 0)
-          //         ],
-          //       ).paddingSymmetric(horizontal: 24),
-          //     )
-          // else if (searchState is SearchFailure)
-          //   SliverFillRemaining(
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.stretch,
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Text(
-          //           'An error occurred while trying to fetch trips\n Please try again later',
-          //           textAlign: TextAlign.center,
-          //           style: theme.textTheme.labelMedium?.copyWith(fontSize: 18),
-          //         ).paddingOnly(bottom: 16),
-          //         FilledButton(
-          //           onPressed: () {},
-          //           child: const Text('Try again'),
-          //         ).paddingOnly(bottom: 0)
-          //       ],
-          //     ).paddingSymmetric(horizontal: 24),
-          //   )
-          // else if (searchState is SearchLoading)
-          //   const SliverFillRemaining(
-          //     child: CircularProgressIndicator.adaptive(),
-          //   )
+                  }).sliverPaddingOnly(top: 32)
+            else
+              SliverFillRemaining(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No trips available for selection',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelMedium?.copyWith(fontSize: 22),
+                    ).paddingOnly(bottom: 8),
+                    Text(
+                      'Browse all available trips',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelMedium?.copyWith(fontSize: 18),
+                    ).paddingOnly(bottom: 16),
+                    FilledButton(
+                      onPressed: () async {
+                        await ref.read(searchStateProvider.notifier).fetchAllTrip();
+                      },
+                      child: const Text('Browse all trip'),
+                    ).paddingOnly(bottom: 0)
+                  ],
+                ).paddingSymmetric(horizontal: 24),
+              )
+          else if (searchState is SearchFailure)
+            SliverFillRemaining(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'An error occurred while trying to fetch trips\n Please try again later',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(fontSize: 18),
+                  ).paddingOnly(bottom: 16),
+                  FilledButton(
+                    onPressed: () {},
+                    child: const Text('Try again'),
+                  ).paddingOnly(bottom: 0)
+                ],
+              ).paddingSymmetric(horizontal: 24),
+            )
+          else if (searchState is SearchLoading)
+            const SliverFillRemaining(
+              child: CircularProgressIndicator.adaptive(),
+            )
         ],
       ),
     ).dismissFocus();

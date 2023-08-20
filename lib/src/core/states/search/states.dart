@@ -18,16 +18,18 @@ class SearchLoading extends SearchStates {
 ///
 class SearchSuccess extends SearchStates {
   ///
-  SearchSuccess({required this.trip});
+  SearchSuccess({required this.trips});
 
   ///
-  final Trips? trip;
+  final List<Trips> trips;
   @override
-  List<Object?> get props => [trip];
+  List<Object?> get props => [trips];
 }
 
 ///
 class SearchFailure extends SearchStates {
+  SearchFailure({required this.error});
+  final String error;
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [error];
 }
