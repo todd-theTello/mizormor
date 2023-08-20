@@ -26,15 +26,15 @@ class UserRepository {
     XFile? idCardImage,
   }) async {
     try {
+      FirebaseFirestore.instance.collection('users').doc(LocalPreference.userID).update(
+            user.toJson(),
+          );
       if (profileImage != null) {
         await uploadImage(file: profileImage, reference: 'profile_image_url');
       }
       if (idCardImage != null) {
-        await uploadImage(file: idCardImage, reference: 'id_card_image_url');
+        await uploadImage(file: idCardImage, reference: 'id_image');
       }
-      FirebaseFirestore.instance.collection('users').doc(LocalPreference.userID).update(
-            user.toJson(),
-          );
       final firebaseUser = await FirebaseFirestore.instance
           .collection('users')
           .where('user_id', isEqualTo: LocalPreference.userID)
