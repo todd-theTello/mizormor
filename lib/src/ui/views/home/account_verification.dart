@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mizormor/src/core/model/user.dart';
+import 'package:mizormor/src/core/states/users/states_notifier.dart';
 import 'package:mizormor/utils/extensions/alignment.dart';
 import 'package:mizormor/utils/extensions/dismiss_keyboard.dart';
 import 'package:mizormor/utils/extensions/padding.dart';
 
 import '../../../../utils/mixins/input_validation_mixins.dart';
+import '../../../../utils/overlays/authentication_loading_overlay/loading_screen.dart';
 import 'elements/account_verification.dart';
 
 enum IdType { passport, nationalID }
 
 class AccountVerificationView extends ConsumerStatefulWidget {
-  const AccountVerificationView({super.key});
-
+  const AccountVerificationView({required this.user, super.key});
+  final MizormorUserInfo user;
   @override
   ConsumerState createState() => _AccountVerificationViewState();
 }
@@ -42,7 +45,8 @@ class _AccountVerificationViewState extends ConsumerState<AccountVerificationVie
         (surnameController.text.trim().length > 1) &&
         (otherNamesController.text.trim().length > 1) &&
         phoneNumberController.text.length == 9 &&
-        idType.value != null) {
+        idType.value != null &&
+        idNumberController.text.trim().isNotEmpty) {
       formNotifier.value = (personalDetails: true, documentsUpload: formNotifier.value.documentsUpload);
     } else {
       formNotifier.value = (personalDetails: false, documentsUpload: formNotifier.value.documentsUpload);
@@ -57,6 +61,34 @@ class _AccountVerificationViewState extends ConsumerState<AccountVerificationVie
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    otherNamesController.text = widget.user.otherNames ?? "";
+    surnameController.text = widget.user.surname ?? "";
+    emailController.text = widget.user.email ?? "";
+    phoneNumberController.text = widget.user.phoneNumber?.replaceAll('+233', '') ?? "";
+    ref.listen(userStateProvider, (previous, state) async {
+      if (state is UserLoading) {
+        AuthenticationLoadingScreen.instance().show(context: context, text: 'Uploading documents');
+      } else {
+        AuthenticationLoadingScreen.instance().hide();
+      }
+      if (state is UserSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text('Your account has been verified'),
+          ),
+        );
+        Navigator.of(context).pop();
+      } else if (state is UserFailure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: theme.colorScheme.error,
+            content: Text(state.error!),
+          ),
+        );
+      }
+    });
     return Scaffold(
       body: ValueListenableBuilder(
           valueListenable: currentIndex,
@@ -156,13 +188,20 @@ class _AccountVerificationViewState extends ConsumerState<AccountVerificationVie
                               visible: page == 3,
                               child: FilledButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      behavior: SnackBarBehavior.floating,
-                                      content: Text('Thank you for verifying your details'),
-                                    ),
-                                  );
+                                  ref.read(userStateProvider.notifier).updateUser(
+                                        user: widget.user.copyWith(
+                                          userId: widget.user.userId,
+                                          surname: surnameController.text,
+                                          otherNames: otherNamesController.text,
+                                          email: emailController.text,
+                                          phoneNumber: '+233${phoneNumberController.text}',
+                                          idType: idType.value.toString(),
+                                          verified: true,
+                                          idNumber: idNumberController.text,
+                                        ),
+                                        profileImage: selfieImage.value,
+                                        idCardImage: idImage.value,
+                                      );
                                 },
                                 child: const Text('Confirm'),
                               ).expanded(),
