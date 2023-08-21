@@ -164,13 +164,14 @@ class _TripsViewState extends ConsumerState<TripsView> {
                   ],
                 ),
               ).sliverPaddingOnly(bottom: 32),
-          SliverToBoxAdapter(
-            child: Text(
-              'Completed Trips',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-            ).paddingOnly(left: 24, bottom: 16),
-          ),
           if (tripState is UserTripSuccess) ...[
+            if (tripState.trips.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Text(
+                  'Completed Trips',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ).paddingOnly(left: 24, bottom: 16),
+              ),
             if (tripState.trips.any((element) => element.tripStatus == 'COMPLETED'))
               SliverList.separated(
                 itemCount: tripState.trips.where((element) => element.tripStatus == 'COMPLETED').length,
@@ -233,7 +234,33 @@ class _TripsViewState extends ConsumerState<TripsView> {
                   ],
                 ),
               )
-          ]
+          ] else if (tripState is TripLoading)
+            SliverFillRemaining(
+              child: const CircularProgressIndicator.adaptive().centerAlign(),
+            )
+          else if (tripState is TripFailure)
+            SliverFillRemaining(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/no-data-1.svg',
+                    height: 200,
+                  ),
+                  Text(
+                    'Unable to fetch trips',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge,
+                  ).paddingOnly(bottom: 8),
+                  Text(
+                    tripState.error,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge,
+                  ).paddingOnly(bottom: 16),
+                ],
+              ),
+            )
         ],
       ).dismissFocus(),
     );

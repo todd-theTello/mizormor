@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mizormor/src/core/states/authentication/state_notifier.dart';
 
 import 'config/theme/theme.dart';
 import 'firebase_options.dart';
@@ -30,6 +31,11 @@ void main() async {
       await container.read(userTripStateProvider.notifier).getUserTrips();
       await container.read(tripStateProvider.notifier).getAllTrips();
     }
+    container.listen(userStateProvider, (previous, state) async {
+      if (state is UserFailure) {
+        await container.read(authenticationProvider.notifier).signOut();
+      }
+    });
     runApp(
       UncontrolledProviderScope(
         container: container,

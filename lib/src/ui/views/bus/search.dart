@@ -26,7 +26,7 @@ class SearchBusView extends ConsumerStatefulWidget {
 class _SearchBusViewState extends ConsumerState<SearchBusView> {
   final TextEditingController destinationController = TextEditingController();
   ValueNotifier<DateTime?> departureDate = ValueNotifier(null);
-  ValueNotifier<bool?> validForm = ValueNotifier(null);
+  ValueNotifier<bool> validForm = ValueNotifier(false);
   void validateForm() {
     validForm.value = departureDate.value != null && destinationController.text.isNotEmpty;
   }
@@ -53,17 +53,16 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                       TextField(
                         controller: destinationController,
                         readOnly: true,
-                        onChanged: (_) {
-                          validateForm();
-                        },
                         onTap: () async {
                           destinationController.text = await showModalBottomSheet(
                             showDragHandle: true,
                             context: context,
                             builder: (_) => const LocationSelector(),
                           );
-                          if (form!) {
-                            ref.read(searchStateProvider.notifier).fetchRequestedTrip(
+                          validateForm();
+
+                          if (validForm.value) {
+                            await ref.read(searchStateProvider.notifier).fetchRequestedTrip(
                                   data: TripRequestData(
                                     destination: destinationController.text,
                                     departureDate: departureDate.value!,
@@ -95,8 +94,8 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                                 );
                                 validateForm();
 
-                                if (form!) {
-                                  ref.read(searchStateProvider.notifier).fetchRequestedTrip(
+                                if (validForm.value) {
+                                  await ref.read(searchStateProvider.notifier).fetchRequestedTrip(
                                         data: TripRequestData(
                                           destination: destinationController.text,
                                           departureDate: departureDate.value!,

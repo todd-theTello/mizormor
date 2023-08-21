@@ -121,9 +121,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
               [
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const SearchBusView(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const SearchBusView()),
                   ),
                   //context.go('/search'),
                   child: Container(
@@ -219,6 +217,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                                 )),
                               );
                             },
+                            onLongPress: () {},
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -249,7 +248,7 @@ class _DashboardViewState extends ConsumerState<HomeView> {
                                           ).expanded(),
                                         ],
                                       ).paddingSymmetric(horizontal: 12).expanded(),
-                                      Text('Takoradi', style: theme.textTheme.titleMedium),
+                                      Text(tripState.trips[index].destination, style: theme.textTheme.titleMedium),
                                     ],
                                   ).paddingSymmetric(vertical: 12),
                                   RichTextWidget(texts: [

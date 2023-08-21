@@ -13,7 +13,7 @@ class SearchRepository {
           .collection('trips')
           .where('date', isEqualTo: date)
           .where('status', isEqualTo: 'NOT STARTED')
-          .where('passenger_ids', arrayContains: LocalPreference.userID)
+          // .where('passenger_ids', arrayContains: LocalPreference.userID)
           .where('destination', isEqualTo: data.destination.capitalize)
           .get();
       final trips = List<Trips>.from((firebaseTrips.docs).map(
@@ -30,11 +30,8 @@ class SearchRepository {
 
   Future<BaseResponse<List<Trips>>> getAllTrips() async {
     try {
-      final firebaseTrips = await FirebaseFirestore.instance
-          .collection('trips')
-          .where('status', isEqualTo: 'NOT STARTED')
-          .where('passenger_ids', arrayContains: LocalPreference.userID)
-          .get();
+      final firebaseTrips =
+          await FirebaseFirestore.instance.collection('trips').where('status', isEqualTo: 'NOT STARTED').get();
       final trips = List<Trips>.from((firebaseTrips.docs).map(
         (e) => Trips.fromJson(e.data()),
       ));
