@@ -12,20 +12,12 @@ class PaymentsRepository {
 
       if (tripPassengers.docs.length < trips.docs.first.data()['seat_capacity']) {
         if (tripPassengers.docs.isNotEmpty) {
-          await trips.docChanges.first.doc.reference.collection('passengers').doc(user.userId).update(
-                user.toJson()
-                  ..addAll({
-                    'pickup_point': pickupPoint,
-                    'user_id': user.userId,
-                  }),
+          await trips.docs.first.reference.collection('passengers').doc(user.userId).update(
+                user.toJson()..addAll({'pickup_point': pickupPoint, 'user_id': user.userId}),
               );
         } else {
-          await trips.docChanges.first.doc.reference.collection('passengers').doc(user.userId).set(
-                user.toJson()
-                  ..addAll({
-                    'pickup_point': pickupPoint,
-                    'user_id': user.userId,
-                  }),
+          await trips.docs.first.reference.collection('passengers').doc(user.userId).set(
+                user.toJson()..addAll({'pickup_point': pickupPoint, 'user_id': user.userId}),
               );
         }
         final passengersId = (trips.docs.first.data()['passenger_ids']);

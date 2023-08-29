@@ -12,6 +12,7 @@ class Trips {
     required this.departureTime,
     required this.tripStatus,
     required this.passengers,
+    required this.passengerIds,
     required this.date,
     required this.seatCapacity,
   });
@@ -23,6 +24,9 @@ class Trips {
         destination: json['destination'],
         pickupPoint: List<String>.from(
           (json['pick_up_points'] as List<dynamic>).map((e) => e),
+        ),
+        passengerIds: List<String>.from(
+          (json['passenger_ids'] as List<dynamic>).map((e) => e),
         ),
         ticketPrice: double.parse(json['ticket_price'].toString()),
         departureTime: (json['departure_time'] as Timestamp).toDate(),
@@ -58,6 +62,9 @@ class Trips {
 
   ///
   final List<String> pickupPoint;
+
+  ///
+  final List<String> passengerIds;
 
   ///
   final double ticketPrice;

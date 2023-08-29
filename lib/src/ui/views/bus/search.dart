@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:mizormor/src/core/states/users/states_notifier.dart';
+import 'package:mizormor/src/ui/views/home/account_verification.dart';
 
 import '../../../../utils/extensions/alignment.dart';
 import '../../../../utils/extensions/dismiss_keyboard.dart';
@@ -292,13 +294,26 @@ class _SearchBusViewState extends ConsumerState<SearchBusView> {
                                           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
                                         ),
                                         onPressed: () async {
-                                          unawaited(
-                                            Navigator.of(context).push(MaterialPageRoute(
-                                              builder: (_) => TicketPaymentView(
-                                                tripDetails: searchState.trips[index],
-                                              ),
-                                            )),
-                                          );
+                                          final user = ref.watch(userStateProvider);
+                                          if (user is UserSuccess && user.user.verified) {
+                                            unawaited(
+                                              Navigator.of(context).push(MaterialPageRoute(
+                                                builder: (_) => TicketPaymentView(
+                                                  tripDetails: searchState.trips[index],
+                                                ),
+                                              )),
+                                            );
+                                          } else if (user is UserSuccess && !user.user.verified) {
+                                            unawaited(
+                                              Navigator.of(context).push(MaterialPageRoute(
+                                                builder: (_) => AccountVerificationView(
+                                                  user: user.user,
+                                                  isHomePage: false,
+                                                  tripDetails: searchState.trips[index],
+                                                ),
+                                              )),
+                                            );
+                                          }
                                         },
                                         child: const Text('Book now'),
                                       ),

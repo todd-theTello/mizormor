@@ -55,9 +55,9 @@ class UserTripsStateNotifier extends StateNotifier<TripStates> {
 
 class TripsPaymentStateNotifier extends StateNotifier<TripStates> {
   ///
-  TripsPaymentStateNotifier() : super(TripInitial());
+  TripsPaymentStateNotifier({required this.ref}) : super(TripInitial());
   final PaymentsRepository _paymentsRepository = PaymentsRepository();
-
+  final Ref ref;
   Future<void> makeTripPayment({
     required Trips trip,
     required String pickupPoint,
@@ -68,6 +68,7 @@ class TripsPaymentStateNotifier extends StateNotifier<TripStates> {
       final response = await _paymentsRepository.makePayment(trip: trip, pickupPoint: pickupPoint, user: user);
       if (response.status) {
         state = TripPaymentSuccess();
+        await ref.read(userTripStateProvider.notifier).getUserTrips();
       } else {
         state = TripFailure(
           error: response.message ?? "Couldn't fetch all trips",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mizormor/src/core/model/trips.dart';
 import 'package:mizormor/src/core/model/user.dart';
 import 'package:mizormor/src/core/states/users/states_notifier.dart';
 import 'package:mizormor/utils/extensions/alignment.dart';
@@ -9,13 +10,17 @@ import 'package:mizormor/utils/extensions/padding.dart';
 
 import '../../../../utils/mixins/input_validation_mixins.dart';
 import '../../../../utils/overlays/authentication_loading_overlay/loading_screen.dart';
+import '../payment/ticket_payment.dart';
 import 'elements/account_verification.dart';
 
 enum IdType { passport, nationalID }
 
 class AccountVerificationView extends ConsumerStatefulWidget {
-  const AccountVerificationView({required this.user, super.key});
+  const AccountVerificationView({required this.user, bool? isHomePage, this.tripDetails, super.key})
+      : isHomePage = isHomePage ?? true;
   final MizormorUserInfo user;
+  final bool isHomePage;
+  final Trips? tripDetails;
   @override
   ConsumerState createState() => _AccountVerificationViewState();
 }
@@ -78,7 +83,18 @@ class _AccountVerificationViewState extends ConsumerState<AccountVerificationVie
             content: Text('Your account has been verified'),
           ),
         );
-        Navigator.of(context).pop();
+        if (widget.isHomePage) {
+          Navigator.of(context).pop();
+        } else {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TicketPaymentView(
+                  tripDetails: widget.tripDetails!,
+                ),
+              ),
+              (route) => route.isFirst);
+        }
       } else if (state is UserFailure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

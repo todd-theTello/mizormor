@@ -20,7 +20,10 @@ class TripsRepository {
 
   Future<BaseResponse<List<UserTrips>>> getUserTrips() async {
     try {
-      final firebaseTrips = await FirebaseFirestore.instance.collection('user_trips').get();
+      final firebaseTrips = await FirebaseFirestore.instance
+          .collection('user_trips')
+          .where('user_id', isEqualTo: LocalPreference.userID)
+          .get();
       final userTrips = List<UserTrips>.from(
         (firebaseTrips.docs).map(
           (e) => UserTrips.fromJson(e.data()),

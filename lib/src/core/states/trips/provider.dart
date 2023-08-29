@@ -10,5 +10,5 @@ final userTripStateProvider = StateNotifierProvider<UserTripsStateNotifier, Trip
   (ref) => UserTripsStateNotifier(),
 );
 final tripPaymentStateProvider = StateNotifierProvider<TripsPaymentStateNotifier, TripStates>(
-  (ref) => TripsPaymentStateNotifier(),
+  (ref) => TripsPaymentStateNotifier(ref: ref),
 );

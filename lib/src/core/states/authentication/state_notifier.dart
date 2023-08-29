@@ -39,6 +39,7 @@ class AuthenticationStateNotifier extends StateNotifier<AuthenticationStates> {
         await ref.read(onboardingProvider.notifier).setLoggedIn();
         ref.read(userStateProvider.notifier).getUserInfo();
         ref.read(tripStateProvider.notifier).getAllTrips();
+        ref.read(userTripStateProvider.notifier).getUserTrips();
 
         /// fetch main page data if authentication is successful
         // await ref.read(mainPageStateProvider.notifier).fetchUserInfo();
@@ -73,6 +74,7 @@ class AuthenticationStateNotifier extends StateNotifier<AuthenticationStates> {
         await ref.read(onboardingProvider.notifier).setLoggedIn();
         ref.read(userStateProvider.notifier).getUserInfo();
         ref.read(tripStateProvider.notifier).getAllTrips();
+        ref.read(userTripStateProvider.notifier).getUserTrips();
 
         /// fetch main page data if authentication is successful
         // await ref.read(mainPageStateProvider.notifier).fetchUserInfo();
@@ -111,6 +113,7 @@ class AuthenticationStateNotifier extends StateNotifier<AuthenticationStates> {
         await ref.read(onboardingProvider.notifier).setLoggedIn();
         ref.read(userStateProvider.notifier).getUserInfo();
         ref.read(tripStateProvider.notifier).getAllTrips();
+        ref.read(userTripStateProvider.notifier).getUserTrips();
 
         /// fetch main page data if authentication is successful
         // await ref.read(mainPageStateProvider.notifier).fetchUserInfo();
@@ -146,6 +149,7 @@ class AuthenticationStateNotifier extends StateNotifier<AuthenticationStates> {
         /// Set onboarding state state to onboarded
         await ref.read(onboardingProvider.notifier).setLoggedIn();
         ref.read(userStateProvider.notifier).getUserInfo();
+        ref.read(userTripStateProvider.notifier).getUserTrips();
         ref.read(tripStateProvider.notifier).getAllTrips();
 
         /// fetch main page data if authentication is successful

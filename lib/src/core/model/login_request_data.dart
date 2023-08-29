@@ -46,5 +46,6 @@ class RegistrationRequestData extends LoginRequestData {
         'phone_number': phoneNumber,
         'surname': surname,
         'other_names': otherNames,
+        'verified': false,
       };
 }

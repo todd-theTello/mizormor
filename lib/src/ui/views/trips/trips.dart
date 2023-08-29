@@ -10,12 +10,9 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../utils/extensions/dismiss_keyboard.dart';
 import '../../../../utils/extensions/padding.dart';
-// import '../../../core/states/trips/states_notifiers.dart';
 import '../../widgets/rich_text_widget/rich_text.dart';
 import '../bus/search.dart';
 import 'trip_details.dart';
-
-List<String> tripsAsString = [];
 
 /// User trips history page
 class TripsView extends ConsumerStatefulWidget {
